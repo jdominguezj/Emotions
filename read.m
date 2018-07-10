@@ -8,13 +8,10 @@ slb=datalb(:,1).*5/1024;%Linea base conductividad
 plb=datalb(:,2).*5/1024;%Linea base pulso
 s=data(:,1).*5/1024; %Conductividad
 p=data(:,2).*5/1024; %Pulso
-vector=1:length(s);
 % s=data(25001:102500,1).*5/1024; %Conductividad
 % p=data(25001:102500,2).*5/1024; %Pulso
-
 Fs=500; %F. sampling
 T=1/Fs; %T. sampling
-
 %%Prueba eliminacion 500 muestras cada 6 segundos
 
 %%
@@ -55,7 +52,7 @@ pulsolb=ylb;
 
 
 %Filtrado pasabajos GSR
-f3=2;
+f3=1.5;
 w3=2*f3/Fs;
 B2=fir1(1000,w3,'low',win2);
 y1=filter(B2,1,s);
@@ -66,6 +63,7 @@ gsr = y1;
 y2=filter(B2,1,slb);
 y2=y2(1001:end);      %Eliminacion de primeras 1000 muestras
 gsrlb = y2;
+gsrlb=gsrlb-mean(gsrlb);
 
 %Segmentacion en ventanas de 5 segundos
 
@@ -85,7 +83,7 @@ gsrlb = y2;
  n_iterlb = length(clb);
  
 %% 
-%Definicion ventana hamming
+%Definicion ventana hamming para FFT
 winh=hamming(2500);
 
 %Calculo de la FFT para la linea base del ritmo cardiaco
@@ -117,9 +115,21 @@ end
 interbeat=60./(diff(muestra)/500);
 %%
 %Estimacion de conductividad promedio cada 5 segundos
-nk=500;
+nk=250;
 bk=arrayfun(@(i) mean(gsr(i:i+nk-1)),1:nk:length(gsr)-nk+1);
 % siem=1024+2*s+10000/512-s; %Valor en Komhs
+%%
+%Prueba 2 
+scrb=downsample(gsr,25);
+scr=scrb-mean(scrb);
+comd=diff(scr);
+co=conv(bartlett(20),comd);
+
+
+scrlb=downsample(gsrlb,25);
+scrlb=scrlb-mean(scrlb);
+comlb=diff(scrlb);
+colb=conv(bartlett(20),comlb);
 %%    
 figure(1)
 subplot(2,2,1)
@@ -134,13 +144,23 @@ plot(t,pulsoaf,'r')
 subplot(2,2,4); 
 plot(tplb,pulsolb,'b')
 
-%%
-disp('Valores linea base: ')
-fprintf('Conductividad linea base %8f .\n',mean(gsrlb));
-fprintf('Ritmo cardiaco linea base %8f .\n',mean(hrlb));
-disp(' ')
+figure(2)
 
-disp('Valores durante la prueba: ')
-fprintf('Conductividad %8f .\n',mean(gsr));
-fprintf('Ritmo cardiaco %8f .\n',mean(hr));
-fprintf('Standarized mean difference in Bpm %8f .\n',mean(hrv));
+findpeaks(co,'MinPeakProminence',0.2*max(co))
+
+
+figure(3)
+plot(co)
+%%x
+disp('Extraccion de caractersticas')
+disp('Conductividad')
+fprintf('SCR B.L  Mean %8f .\n',mean(gsrlb));
+fprintf('SCR B.L  Standard deviation %8f .\n',std(gsrlb));
+fprintf('SCR Mean %8f .\n',mean(gsr));
+fprintf('SCR Standard deviation %8f .\n',std(gsr));
+
+fprintf('Heart Rate B.L Mean %8f .\n',mean(hrlb));
+fprintf('Heart Rate B.L Standard deviation %8f .\n',std(hrlb));
+fprintf('Heart Rate Mean %8f .\n',mean(hr));
+fprintf('Heart Rate Standard deviation %8f .\n',std(hr));
+fprintf('Heart Rate SMD %8f .\n',mean(hrv));
