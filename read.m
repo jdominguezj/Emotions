@@ -1,8 +1,8 @@
 %prueba realizada con 2000 us de periodo de muestreo
 %115200 puerto
 clear,clc
-datalb= dlmread('05_M_espontaneo_L_lb.log');
-data=dlmread('05_M_espontaneo_L.log');
+datalb= dlmread('lb_test2_JG.log');
+data=dlmread('JG_Test2_Red.log');
 
 slb=datalb(:,1).*5/1024;%Linea base conductividad
 plb=datalb(:,2).*5/1024;%Linea base pulso
@@ -13,7 +13,6 @@ p=data(:,2).*5/1024; %Pulso
 Fs=500; %F. sampling
 T=1/Fs; %T. sampling
 %%Prueba eliminacion 500 muestras cada 6 segundos
-
 %%
 Tlb=length(slb);    %Numero de muestras de linea base
 Tamp=length(p);     %Numero de muestras de tratamiento
@@ -66,7 +65,7 @@ gsrmm=movmean(gsr,500); %Mejor resultado tomando el valor medio cada 500 muestra
 y2=filter(B2,1,slb);
 y2=y2(1001:end);      %Eliminacion de primeras 1000 muestras
 gsrlb = y2;
-% gsrlb=gsrlb-mean(gsrlb);
+%Filtro de media movil
 gsrmmlb=movmean(gsrlb,500); %Mejor resultado tomando el valor medio cada 500 muestras (1 segundo)
 
 % gsrlb=gsrlb-mean(gsrlb);
@@ -142,10 +141,10 @@ colb=conv(bartlett(20),comlb);
 %Las señales rojas son las correspondientes a la prueba
 figure(1)
 subplot(2,2,1)
-plot(t1,gsr,'r')
+plot(t1,gsrmm,'r')
 
 subplot(2,2,2)
-plot(tglb,gsrlb,'b')
+plot(tglb,gsrmmlb,'b')
  
 subplot(2,2,3);
 plot(t,pulsoaf,'r')
@@ -178,6 +177,8 @@ b=b(1,1:end-1);
 [freq,index]=max(h);
 b=b(index);
 
+x=1:length(s);
+
 
 %RMSSD -> Reflects the beat-to-beat variance in HR 
 %TINN  -> Baseline width of the RR interval histogram
@@ -190,9 +191,8 @@ fprintf('SCR Standard deviation %8f .\n',std(gsrmm));
 
 fprintf('Heart Rate B.L Mean %8f .\n',mean(hrlb));
 fprintf('Heart Rate B.L Standard deviation %8f .\n',std(hrlb));
-fprintf('Heart Rate Mean %8f .\n',mean(hr));
-fprintf('Heart Rate Standard deviation %8f .\n',std(hr));
 fprintf('Heart Rate Mean (FFT) %8f .\n',mean(hr));
+fprintf('Heart Rate Standard deviation %8f .\n',std(hr));
 fprintf('Heart Rate SMD %8f .\n',mean(hrv));
 fprintf('Heart Rate Mean (Time) %8f .\n',mean(interbeat));
 fprintf('Heart Rate SDNN (Time) %8f .\n',std(diff(NN)));
