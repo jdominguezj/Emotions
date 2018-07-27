@@ -1,13 +1,24 @@
-%prueba realizada con 2000 us de periodo de muestreo
+%2000 us de periodo de muestreo
 %115200 puerto
-clear,clc
-datalb= dlmread('lb_test2_JG.log');
-data=dlmread('JG_Test2_Red.log');
 
+clear,clc
+datalb= dlmread('01_M_espontaneo_L_lb.log');
+data=dlmread('01_M_espontaneo_L.log');
+%From 35000 --> Anger     150 seg
+%From 45000 --> Amusement 165 seg
 slb=datalb(:,1).*5/1024;%Linea base conductividad
 plb=datalb(:,2).*5/1024;%Linea base pulso
-s=data(:,1).*5/1024; %Conductividad
-p=data(:,2).*5/1024; %Pulso
+
+%Anger
+% 
+% s=data(40001:75000,1).*5/1024; %Conductividad
+% p=data(40001:75000,2).*5/1024; %Pulso
+ 
+%Amusement
+
+s=data(47501:82500,1).*5/1024; %Conductividad
+p=data(47501:82500,2).*5/1024; %Pulso
+
 % s=data(25001:102500,1).*5/1024; %Conductividad
 % p=data(25001:102500,2).*5/1024; %Pulso
 Fs=500; %F. sampling
@@ -28,7 +39,7 @@ Tbase=(0:Tlb-1)*T;
 tglb=Tbase(1001:end);%Vector de tiempo para conductividad
 tplb=Tbase(51:end); %Vector de tiempo para ritmo
 
-%Definicion ventana rectangulares 
+%Definicion ventana hamming 
  
 win=hamming(101);   %Tamaño de ventana para Ritmo: 101
 win2=hamming(1001); %Tamaño de ventana para Conductividad: 1001
@@ -51,7 +62,7 @@ pulsolb=ylb;
 
 
 %Filtrado pasabajos GSR
-f3=1.5;
+f3=1;
 w3=2*f3/Fs;
 B2=fir1(1000,w3,'low',win2);
 y1=filter(B2,1,s);
@@ -151,20 +162,24 @@ plot(t,pulsoaf,'r')
 
 subplot(2,2,4); 
 plot(tplb,pulsolb,'b')
+% 
+% figure(2)
+% findpeaks(co,'MinPeakProminence',0.2*max(co));
+% 
+% 
+% figure(3)
+% plot(co)
+% %%x
+% disp('Extraccion de caractersticas')
+% disp('Conductividad')
+% findpeaks(co,'MinPeakProminence',0.2*max(co)) %Eliminar picos menores al 20% del valor maximo de amplitud detectado en la conductividad
 
 figure(2)
+subplot(2,1,1);
+plot(gsrmm,'r')
+subplot(2,1,2);
+plot(diff(gsrmm),'b')
 
-findpeaks(co,'MinPeakProminence',0.2*max(co))
-
-
-figure(3)
-plot(co)
-%%x
-disp('Extraccion de caractersticas')
-disp('Conductividad')
-findpeaks(co,'MinPeakProminence',0.2*max(co)) %Eliminar picos menores al 20% del valor maximo de amplitud detectado en la conductividad
-
-figure(3)
 %Grafica de la derivada de la Conductividad convolucionada con ventana
 %Bartlett de 20 puntos.
 %%
@@ -177,10 +192,7 @@ b=b(1,1:end-1);
 [freq,index]=max(h);
 b=b(index);
 
-x=1:length(s);
-
-
-%RMSSD -> Reflects the beat-to-beat variance in HR 
+%RMSSD -> Reflects the beat-to-beat varian  ce in HR 
 %TINN  -> Baseline width of the RR interval histogram
 disp('Features extraction')
 
@@ -197,4 +209,4 @@ fprintf('Heart Rate SMD %8f .\n',mean(hrv));
 fprintf('Heart Rate Mean (Time) %8f .\n',mean(interbeat));
 fprintf('Heart Rate SDNN (Time) %8f .\n',std(diff(NN)));
 fprintf('Heart Rate RMSSD (Time) %8f .\n',rms(diff(NN)));
-fprintf('Heart Rate TINN (Time) %8f .\n',max(b));
+fprintf('Heart Rate Mode (Time) %8f .\n',max(b));
